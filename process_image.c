@@ -29,34 +29,55 @@ int size[2];
 unsigned char proc_img[DIM][DIM];
 {
 	int height = size[0], width = size[1];
-//	int new_image_vertical[DIM-2][DIM-2];
-	int new_image_horizontal[DIM - 2][DIM - 2];
+	
+int copy_image[DIM][DIM];
 	int i, j, k;
 
-	int horizontal[N][N] = { { -1,-1,-1 },
-							{ 0,0,0 },
-							{ 1,1,1 }
-	};
-	int sum = 0, row1 = 0, row2 = 0, row3 = 0;
+	int diff1 = 0, diff2 = 0;
+	int row_minus = 0, col_minus = 0, exact = 0;
 
-	for (i = 0; i < DIM - 2; i++) {
-		for (j = 0; j < DIM - 2; j++) {
-			
-			row1 = (double) image[i][j] * horizontal[0][0] + (double) image[i][j + 1] * horizontal[0][1] + (double) image[i][j + 2] * horizontal[0][2];
-			row2 = (double) image[i + 1][j] * horizontal[1][0] + (double) image[i + 1][j + 1] * horizontal[1][1] + (double) image[i + 1][j + 2] * horizontal[1][2];
-			row3 = (double) image[i + 2][j] * horizontal[2][0] + (double) image[i + 2][j + 1] * horizontal[2][1] + (double) image[i + 2][j + 2] * horizontal[2][2];
-			sum = row1 + row2 + row3;
-			new_image_horizontal[i][j] = sum;
-			sum = 0; row1 = 0; row2 = 0; row3 = 0;
+	/*
+
+	*/
+	for (i = 0; i < DIM; i++) {
+		for (j = 0; j < DIM; j++) {
+			copy_image[i][j] = image[i][j];
 		}
 	}
-	
-// Update the proc image file
-	for (i = 0; i < DIM - 2; i++) {
-		for (j = 0; j < DIM - 2; j++) {
-			proc_img[i][j] = new_image_horizontal[i][j];
+
+	/*
+
+	*/
+	for (i = 1; i < DIM; i++) {
+		for (j = 1; j < DIM; j++) {
+			row_minus = copy_image[i - 1][j];
+			col_minus = copy_image[i][j - 1];
+			exact = copy_image[i][j];
+
+			diff1 = abs(row_minus - exact);
+			diff2 = abs(col_minus - exact);
+
+			if (diff1 == diff2) {
+				exact = diff1;
+			}
+			else {
+				exact = diff1 < diff2 ? diff1 : diff2;
+			}
+
+			copy_image[i][j] = exact;
 		}
 	}
+
+	/*
+
+	*/
+	for (i = 0; i < DIM; i++) {
+		for (j = 0; j < DIM; j++) {
+			proc_img[i][j] = copy_image[i][j];
+		}
+	}
+
+
 
 
 }
