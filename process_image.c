@@ -1,9 +1,10 @@
+/* This program contains the code for template matching */
+
 #include <stdio.h>
 #include <math.h>
 #include <X11/Xlib.h>
 
 #define DIM 512
-#define N 3
 
 /******************************************************************/
 /* This structure contains the coordinates of a box drawn with    */
@@ -28,56 +29,63 @@ unsigned char image[DIM][DIM];
 int size[2];
 unsigned char proc_img[DIM][DIM];
 {
-	int height = size[0], width = size[1];
+
+	for (int i = 0; i < size[1]; i++) 
+		for (int j = 0; j < size[0]; j++)
+			proc_img[i][j] = 0;
+
+	/* now take a convolution with the filter */	
+	for (int i = 0; i < size[1]; i++) {
+		for (int j = 0; j < size[0]; j++) {
+			/* code for template denominator */
+
+			/* initialize all the values to zero */
+			/* calculate the local max for all pixel values and then mean */
+			int temp1 = 0;
+			for (int i1 = i; i1 < roi.height; i1++) 
+				for (int j1 = 0; j1 < roi.width; j1++)
+					if (image[i1][j1] > temp1)
+						temp1 = image[i1][j1];
+			float mean_image = ((float) temp1)/((float) (roi.width * roi.height));
+			temp1 = 0;
+			/* calculate mean of template */
+			for (int i1 = roi.y; i1 < roi.y + roi.height; i1++)
+				for (int j1 = roi.x; j1 < roi.x + roi.width; j1++)
+					if (image[i1][j1] > temp1)
+						temp1 = image[i1][j1];
+			float mean_template = ((float) temp1)/((float) (roi.width * roi.height));
+
+			/* normalization factor needs to be calculated */
+			float norm1 = 0.0;
+			float norm2 = 0.0;
+			for (int i1 = i; i1 < roi.height; i1++) 
+				for (int j1 = 0; j1 < roi.width; j1++)
+					norm1 += pow(image[i1][j1] - mean_image, 2);
+			for (int i1 = roi.y; i1 < roi.y + roi.height; i1++)
+				for (int j1 = roi.x; j1 < roi.x + roi.width; j1++)
+					norm2 += pow(image[i][j] - mean_template, 2);
+			float norm_factor = pow(norm1 * norm2, 0.5);
+
+			/* endcode */
+
+
+			for (int k = 0; k < roi.height; k++) {
+				/* int est_row = roi.height - 1 - k; */
+				for (int l = 0; l < roi.width; l++) {
+					/* int est_column = roi.width - 1 - l; */
+					float temp = 0.0;
+					int image_row = i + k;
+					int image_column = j + l;
+					int template_row = roi.y + k;
+					int template_column = roi.x + l;	
+					if (image_row >=0 && image_row < size[1] && image_column >= 0 && image_column < size[0]) {
+						temp += (image[image_row][image_column] - mean_image);
+						temp *= (image[template_row][template_column] - mean_template);
+						proc_img[i][j] = (int) 255 * temp / (norm_factor + 0.001);
+					}
 	
-int copy_image[DIM][DIM];
-	int i, j, k;
-
-	int diff1 = 0, diff2 = 0;
-	int row_minus = 0, col_minus = 0, exact = 0;
-
-	/*
-
-	*/
-	for (i = 0; i < DIM; i++) {
-		for (j = 0; j < DIM; j++) {
-			copy_image[i][j] = image[i][j];
-		}
-	}
-
-	/*
-
-	*/
-	for (i = 1; i < DIM; i++) {
-		for (j = 1; j < DIM; j++) {
-			row_minus = copy_image[i - 1][j];
-			col_minus = copy_image[i][j - 1];
-			exact = copy_image[i][j];
-
-			diff1 = abs(row_minus - exact);
-			diff2 = abs(col_minus - exact);
-
-			if (diff1 == diff2) {
-				exact = diff1;
+				}
 			}
-			else {
-				exact = diff1 < diff2 ? diff1 : diff2;
-			}
-
-			copy_image[i][j] = exact;
 		}
-	}
-
-	/*
-
-	*/
-	for (i = 0; i < DIM; i++) {
-		for (j = 0; j < DIM; j++) {
-			proc_img[i][j] = copy_image[i][j];
-		}
-	}
-
-
-
-
+	}	
 }
